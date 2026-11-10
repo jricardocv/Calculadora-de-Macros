@@ -1,0 +1,6 @@
+{
+  "name": "Calculadora de Macros",
+  "description": "Calculadora nutricional de macronutrientes com banco de dados integrado, suporte a tabela TACO e registro de refeições com data e hora.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

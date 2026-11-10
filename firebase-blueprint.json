@@ -1,0 +1,110 @@
+{
+  "entities": {
+    "alimento": {
+      "title": "Alimento",
+      "description": "Dados nutricionais de um alimento por 100g",
+      "type": "object",
+      "properties": {
+        "nome": {
+          "type": "string",
+          "description": "Nome do alimento",
+          "maxLength": 150
+        },
+        "kcal100g": {
+          "type": "number",
+          "description": "Calorias por 100g"
+        },
+        "carbo100g": {
+          "type": "number",
+          "description": "Carboidratos em gramas por 100g"
+        },
+        "prot100g": {
+          "type": "number",
+          "description": "Proteína em gramas por 100g"
+        },
+        "gord100g": {
+          "type": "number",
+          "description": "Gordura em gramas por 100g"
+        },
+        "fonte": {
+          "type": "string",
+          "description": "Fonte do dado: manual, taco ou usuario",
+          "maxLength": 50
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID do usuário criador ou system",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp de criação"
+        }
+      },
+      "required": ["nome", "kcal100g", "carbo100g", "prot100g", "gord100g"]
+    },
+    "refeicao": {
+      "title": "Refeicao",
+      "description": "Registro de refeição para a planilha com data e macronutrientes",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID do registro",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID do usuário proprietário da refeição",
+          "maxLength": 128
+        },
+        "data": {
+          "type": "string",
+          "description": "Data da refeição (DD/MM/YYYY ou YYYY-MM-DD)",
+          "maxLength": 20
+        },
+        "hora": {
+          "type": "string",
+          "description": "Hora do registro opcional (HH:mm:ss)",
+          "maxLength": 20
+        },
+        "refeicao": {
+          "type": "string",
+          "description": "Tipo da refeição: Café da manhã, Lanche da manhã, Almoço, Lanche da tarde, Jantar, Ceia",
+          "maxLength": 50
+        },
+        "totalKcal": {
+          "type": "number",
+          "description": "Total de calorias da refeição"
+        },
+        "totalCarbo": {
+          "type": "number",
+          "description": "Total de carboidratos da refeição"
+        },
+        "totalProt": {
+          "type": "number",
+          "description": "Total de proteínas da refeição"
+        },
+        "totalGord": {
+          "type": "number",
+          "description": "Total de gorduras da refeição"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp ISO da criação"
+        }
+      },
+      "required": ["data", "refeicao", "totalKcal", "totalCarbo", "totalProt", "totalGord"]
+    }
+  },
+  "firestore": {
+    "/alimentos/{alimentoId}": {
+      "schema": "alimento",
+      "description": "Tabela de alimentos e macronutrientes (base enviada, tabela TACO e alimentos criados)"
+    },
+    "/refeicoes/{refeicaoId}": {
+      "schema": "refeicao",
+      "description": "Registros de refeições salvos na planilha com data e totais calculados"
+    }
+  }
+}

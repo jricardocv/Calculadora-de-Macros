@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-\\.]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidAlimento(data) {
+      return data.keys().hasAll(['nome', 'kcal100g', 'carbo100g', 'prot100g', 'gord100g']) &&
+             data.keys().hasOnly(['id', 'nome', 'kcal100g', 'carbo100g', 'prot100g', 'gord100g', 'fonte', 'userId', 'createdAt']) &&
+             data.nome is string && data.nome.size() > 0 && data.nome.size() <= 150 &&
+             data.kcal100g is number && data.kcal100g >= 0 && data.kcal100g <= 5000 &&
+             data.carbo100g is number && data.carbo100g >= 0 && data.carbo100g <= 1000 &&
+             data.prot100g is number && data.prot100g >= 0 && data.prot100g <= 1000 &&
+             data.gord100g is number && data.gord100g >= 0 && data.gord100g <= 1000 &&
+             (!('id' in data) || (data.id is string && data.id.size() <= 128)) &&
+             (!('fonte' in data) || (data.fonte is string && data.fonte.size() <= 50)) &&
+             (!('userId' in data) || (data.userId is string && data.userId.size() <= 128)) &&
+             (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 50));
+    }
+
+    function isValidRefeicao(data) {
+      return data.keys().hasAll(['data', 'refeicao', 'totalKcal', 'totalCarbo', 'totalProt', 'totalGord', 'userId', 'itens']) &&
+             data.keys().hasOnly(['id', 'data', 'hora', 'refeicao', 'totalKcal', 'totalCarbo', 'totalProt', 'totalGord', 'userId', 'itens', 'createdAt', 'observacao']) &&
+             data.userId == request.auth.uid &&
+             data.data is string && data.data.size() > 0 && data.data.size() <= 20 &&
+             (!('id' in data) || (data.id is string && data.id.size() <= 128)) &&
+             (!('hora' in data) || (data.hora is string && data.hora.size() <= 20)) &&
+             data.refeicao is string && data.refeicao.size() <= 50 &&
+             (data.refeicao in ['Café da manhã', 'Lanche da manhã', 'Almoço', 'Lanche da tarde', 'Jantar', 'Ceia']) &&
+             data.totalKcal is number && data.totalKcal >= 0 &&
+             data.totalCarbo is number && data.totalCarbo >= 0 &&
+             data.totalProt is number && data.totalProt >= 0 &&
+             data.totalGord is number && data.totalGord >= 0 &&
+             data.itens is list && data.itens.size() <= 100 &&
+             (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 50));
+    }
+
+    // Alimentos collection - read shared database of foods, authenticated users can insert/update foods
+    match /alimentos/{alimentoId} {
+      allow read: if true;
+      allow create: if isValidId(alimentoId) && isValidAlimento(incoming());
+      allow update: if isValidId(alimentoId) && isValidAlimento(incoming());
+      allow delete: if isSignedIn();
+    }
+
+    // Refeições collection - each user can only read, create, delete their own meal rows
+    match /refeicoes/{refeicaoId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(refeicaoId) && isValidRefeicao(incoming());
+      allow update: if isSignedIn() && isValidId(refeicaoId) && isValidRefeicao(incoming()) && incoming().userId == existing().userId;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}
